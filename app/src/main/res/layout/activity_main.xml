@@ -1,20 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/textScroll"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:overScrollMode="never"
-    >
+<!--<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"-->
+<!--    xmlns:tools="http://schemas.android.com/tools"-->
+<!--    android:id="@+id/textScroll"-->
+<!--    android:layout_width="match_parent"-->
+<!--    android:layout_height="match_parent"-->
+<!--    android:overScrollMode="never"-->
+<!--    >-->
 
-    <TextView
-        android:id="@+id/quranText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:background="@color/white"
-        android:breakStrategy="simple"
-        android:hyphenationFrequency="none"
-        android:textAlignment="textEnd"
-        android:textColor="@color/black"
-        android:textSize="32sp" />
-</ScrollView>
+<!--    <TextView-->
+<!--        android:id="@+id/quranText"-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:background="@color/white"-->
+<!--        android:breakStrategy="simple"-->
+<!--        android:hyphenationFrequency="none"-->
+<!--        android:textAlignment="textEnd"-->
+<!--        android:textColor="@color/black"-->
+<!--        android:textSize="32sp" />-->
+<!--</ScrollView>-->
+
+<RelativeLayout
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:id="@+id/textScroll"
+    android:layout_height="match_parent">
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/quranScroll"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+
+</RelativeLayout>

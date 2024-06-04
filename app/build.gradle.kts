@@ -46,4 +46,6 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     implementation("com.beust:klaxon:5.5")
+    // RecyclerView
+    implementation("androidx.recyclerview:recyclerview:$rootProject.recyclerViewVersion")
 }
