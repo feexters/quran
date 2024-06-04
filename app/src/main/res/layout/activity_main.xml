@@ -3,20 +3,18 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/textScroll"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:overScrollMode="never"
+    >
 
-    <LinearLayout
+    <TextView
+        android:id="@+id/quranText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:paddingBottom="30000pt">
-
-        <TextView
-            android:id="@+id/quranText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="مَثَلُهُمْ كَمَثَلِ ٱلَّذِى ٱسْتَوْقَدَ نَارًا فَلَمَّآ أَضَآءَتْ مَا حَوْلَهُۥ ذَهَبَ ٱللَّهُ بِنُورِهِمْ وَتَرَكَهُمْ فِى ظُلُمَـٰتٍ لَّا يُبْصِرُونَ"
-            android:textAlignment="textEnd"
-            android:textColor="@color/black"
-            android:textSize="16sp" />
-    </LinearLayout>
+        android:background="@color/white"
+        android:breakStrategy="simple"
+        android:hyphenationFrequency="none"
+        android:textAlignment="textEnd"
+        android:textColor="@color/black"
+        android:textSize="32sp" />
 </ScrollView>

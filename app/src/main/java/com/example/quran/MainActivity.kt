@@ -2,21 +2,29 @@ package com.example.quran
 
 import android.graphics.Color
 import android.graphics.Point
-import android.graphics.drawable.Drawable
+import android.os.Build
 import android.os.Bundle
-import android.text.Spannable
+import android.text.PrecomputedText
 import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.TextPaint
+import android.text.method.LinkMovementMethod
 import android.text.style.ClickableSpan
-import android.text.style.ImageSpan
 import android.util.Log
 import android.view.View
 import android.widget.ScrollView
 import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import com.beust.klaxon.Klaxon
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.lang.ref.WeakReference
+import java.util.Random
+
 
 fun TextView.charLocation(offset: Int): Point? {
     layout ?: return null // Layout may be null right after change to the text view
@@ -29,9 +37,10 @@ fun TextView.charLocation(offset: Int): Point? {
 
 class MainActivity : AppCompatActivity() {
     lateinit var ayahs: List<Ayah>
-    private var offset: Int = 0
-    private var limit: Int = 100
-    private var prevRange = IntRange(0, limit)
+    private var offset: Int = 30
+    private var limit: Int = 30
+    private var prevRange = IntRange(0, 100)
+    private var lastPaginateScrollY = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,38 +57,36 @@ class MainActivity : AppCompatActivity() {
         val textScroll = findViewById<ScrollView>(R.id.textScroll)
 
         textScroll.setOnScrollChangeListener { v, scrollX, scrollY, oldScrollX, oldScrollY ->
-            val textView = findViewById<TextView>(R.id.quranText)
+            Log.i("OFFSET", offset.toString())
 
-            val totalHeight = textView.height
-            Log.i("HEIGHT",  totalHeight.toString())
+            Log.i("lastPaginateScrollY", lastPaginateScrollY.toString())
+            Log.i("scrollY", scrollY.toString())
 
-            val isEndReached = totalHeight - 500 < (v.height + scrollY)
+            if (scrollY - lastPaginateScrollY > 50) {
+                val textView = findViewById<TextView>(R.id.quranText)
 
+                val totalHeight = textView.height
 
-            if (isEndReached) {
-                onLoadMore()
+                val isEndReached = totalHeight / 1.4 < (v.height + scrollY)
+
+                Log.i("HEIGHT", totalHeight.toString())
+                Log.i("SCROLL", (v.height + scrollY).toString())
+
+                if (isEndReached) {
+                    lastPaginateScrollY = scrollY
+                    onLoadMore()
+                }
             }
+
         }
 
-        onRenderText(IntRange(0, limit))
+        onRenderText(IntRange(0, limit), null)
     }
 
-    private fun onRenderText(renderRange: IntRange) {
+    @RequiresApi(Build.VERSION_CODES.P)
+    private fun onRenderText(renderRange: IntRange, cutIndex: Int?) {
+
         val textView = findViewById<TextView>(R.id.quranText)
-
-        if (renderRange.first > prevRange.first) {
-            val slicedText = ayahs.slice(IntRange(prevRange.first, renderRange.first)).joinToString(" ") {
-                it.text
-            }
-
-            val positionY = textView.charLocation(slicedText.length - 1)?.y
-
-            Log.i("RENDER positionY",  positionY.toString())
-
-            if (positionY != null) {
-                textView.setPadding(0, positionY, 0, 0)
-            }
-        }
 
         val renderAyahs = ayahs.slice(renderRange)
 
@@ -95,29 +102,28 @@ class MainActivity : AppCompatActivity() {
             val currentCountStart = totalCounts
             val clickableSpan: ClickableSpan = object : ClickableSpan() {
                 override fun onClick(view: View) {
-                    val textView = findViewById<TextView>(R.id.quranText)
-
-                    Log.i("sdfsdfsd", textView.charLocation(currentCountStart - 1)?.y.toString())
-                    Log.i("APP LOGS", "PRESSED message")
+//                    Log.i("sdfsdfsd", textView.charLocation(currentCountStart - 1)?.y.toString())
+//                    Log.i("APP LOGS", "PRESSED message")
                 }
 
                 override fun updateDrawState(textPaint: TextPaint) {
                     super.updateDrawState(textPaint)
                     textPaint.isUnderlineText = false
-                    textPaint.color = Color.RED
+                    val rnd: Random = Random()
+                    textPaint.color = Color.argb(255, rnd.nextInt(256), rnd.nextInt(256), rnd.nextInt(256));
                 }
             }
 
-            if (index % 4 == 0) {
-                val surahIcon: Drawable = getResources().getDrawable(R.drawable.surah);
-                surahIcon.setBounds(0, 0, surahIcon.getIntrinsicWidth() * 3, 24 * 3);
-
-                quranSpannable.setSpan(
-                    ImageSpan(surahIcon, ImageSpan.ALIGN_BASELINE),
-                    totalCounts,
-                    totalCounts + 1,
-                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-                )
+            if (index % 10 == 0) {
+//                val surahIcon: Drawable = getResources().getDrawable(R.drawable.surah);
+//                surahIcon.setBounds(0, 0, surahIcon.getIntrinsicWidth() * 3, 24 * 3);
+//
+//                quranSpannable.setSpan(
+//                    ImageSpan(surahIcon, ImageSpan.ALIGN_BASELINE),
+//                    totalCounts,
+//                    totalCounts + 1,
+//                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+//                )
 
                 quranSpannable.setSpan(
                     clickableSpan,
@@ -131,6 +137,31 @@ class MainActivity : AppCompatActivity() {
         }
 
         textView.text = quranSpannable
+        textView.movementMethod = LinkMovementMethod.getInstance()
+
+        val params = textView.textMetricsParams
+        val ref = WeakReference(textView)
+
+        GlobalScope.launch(Dispatchers.Default) {
+            val pText = PrecomputedText.create(quranSpannable, params)
+            withContext(Dispatchers.Main) {
+                ref.get()?.let { textView ->
+                    textView.text = pText
+
+                    if (cutIndex != null) {
+//                        Log.i("CUT TEXT Y POSITION ===>",  textView.charLocation(cutIndex)?.y.toString())
+
+                        val cutPosition = textView.charLocation(cutIndex)?.y
+
+                        if (cutPosition != null) {
+                            val textScroll = findViewById<ScrollView>(R.id.textScroll)
+
+                            textScroll.scrollY -= cutPosition
+                        }
+                    }
+                }
+            }
+        }
 
         prevRange = renderRange
     }
@@ -138,20 +169,50 @@ class MainActivity : AppCompatActivity() {
     private fun onLoadMore() {
         val isEnd = offset >= ayahs.size
 
-        offset += limit
+        var renderedPage = (prevRange.last + limit - prevRange.first) / limit
+        var startIndex = prevRange.first
+        var cutIndex: Int? = null
 
-        var renderedPage = (prevRange.last - prevRange.first + limit) / limit
-        var startIndex = 0
-
-        if (renderedPage >= 2) {
+        if (renderedPage >= 3) {
+            cutIndex = prevRange.first + limit
             startIndex = prevRange.first + limit
         }
 
-        Log.i("RENDER INDEX",  startIndex.toString())
-        Log.i("RENDER OFFSET",  offset.toString())
+//        Log.i("RENDER INDEX", startIndex.toString())
+        Log.i("RENDER OFFSET", offset.toString())
 
         if (!isEnd) {
-            onRenderText(IntRange(startIndex, offset - 1))
+            if (offset + limit > ayahs.size) {
+                Log.i("END ----->>>>", IntRange(startIndex, ayahs.size - 1).toString())
+
+                onRenderText(IntRange(startIndex, ayahs.size - 1), cutIndex)
+            }
+
+            onRenderText(IntRange(startIndex, offset + limit), cutIndex)
+            offset += limit
         }
     }
+
+//    private fun onLoadBack() {
+//        val isEnd = offset == 0
+//
+//        var renderedPage = (prevRange.last - (prevRange.first - limit)) / limit
+//        var startIndex = prevRange.first
+//
+//        if (renderedPage >= 10) {
+//            startIndex = prevRange.first - limit
+//        }
+//
+//        Log.i("BACK --- RENDER INDEX", startIndex.toString())
+//        Log.i("BACK --- RENDER OFFSET", offset.toString())
+//
+//        if (!isEnd) {
+//            if (offset - limit <= 0) {
+//                onRenderText(IntRange(startIndex, ayahs.size - 1))
+//            }
+//
+//            onRenderText(IntRange(startIndex, offset + limit))
+//            offset += limit
+//        }
+//    }
 }
