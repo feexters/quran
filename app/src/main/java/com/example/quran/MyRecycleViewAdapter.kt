@@ -1,13 +1,11 @@
 
 import android.content.Context
 import android.graphics.Color
-import android.graphics.drawable.Drawable
-import android.text.Spannable
 import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.TextPaint
+import android.text.method.LinkMovementMethod
 import android.text.style.ClickableSpan
-import android.text.style.ImageSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -20,6 +18,9 @@ import com.example.quran.R
 class MyRecycleViewAdapter(private val pages: List<List<Ayah>>, val context: Context) :
     RecyclerView.Adapter<MyRecycleViewAdapter.ViewHolder>() {
     // holder class to hold reference
+
+    private lateinit var mRecyclerView: RecyclerView
+
     inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         //get view reference
         var quranPage: TextView = view.findViewById<TextView>(R.id.quran_page)
@@ -32,16 +33,47 @@ class MyRecycleViewAdapter(private val pages: List<List<Ayah>>, val context: Con
         )
     }
 
+    override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
+        super.onAttachedToRecyclerView(recyclerView)
+        mRecyclerView = recyclerView
+    }
+
+    fun scrollToPosition(position: Int) {
+        mRecyclerView.scrollToPosition(position)
+    }
+
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        //set values
-        holder.quranPage.text = onGetText(pages[position])
+//  TODO: use selected ayahs global state and use ids
+        var selectedIndexes = emptyList<Int>().toMutableList()
+
+        fun onPressAyah(selectedIndex: Int) {
+            if (selectedIndexes.indexOf(selectedIndex) > -1) {
+                selectedIndexes =
+                    selectedIndexes.filter {
+                        it != selectedIndex
+                    }.toMutableList()
+            } else {
+                selectedIndexes += selectedIndex
+            }
+
+            holder.quranPage.text =
+                onGetText(pages[position], selectedIndexes) { index -> onPressAyah(index) }
+        }
+
+        holder.quranPage.text =
+            onGetText(pages[position], selectedIndexes) { index -> onPressAyah(index) }
+        holder.quranPage.movementMethod = LinkMovementMethod.getInstance()
     }
 
     override fun getItemCount(): Int {
         return pages.size
     }
 
-    private fun onGetText(ayahs: List<Ayah>): SpannableStringBuilder {
+    private fun onGetText(
+        ayahs: List<Ayah>,
+        selectedIndexes: List<Int>,
+        onPress: (index: Int) -> Unit
+    ): SpannableStringBuilder {
         val quranText = ayahs.joinToString(" ") {
             it.text
         }
@@ -53,39 +85,31 @@ class MyRecycleViewAdapter(private val pages: List<List<Ayah>>, val context: Con
         ayahs.forEachIndexed { index, it ->
             val clickableSpan: ClickableSpan = object : ClickableSpan() {
                 override fun onClick(view: View) {
-//                    Log.i("sdfsdfsd", textView.charLocation(currentCountStart - 1)?.y.toString())
-//                    Log.i("APP LOGS", "PRESSED message")
+                    onPress(index)
                 }
 
                 override fun updateDrawState(textPaint: TextPaint) {
                     super.updateDrawState(textPaint)
                     textPaint.isUnderlineText = false
-                    textPaint.color = Color.GREEN
+
+                    if (selectedIndexes.indexOf(index) > -1) {
+                        textPaint.color = Color.GREEN
+                    } else {
+                        textPaint.color = Color.BLACK
+                    }
                 }
             }
 
-            if (index % 4 == 0) {
-                val surahIcon: Drawable = context.getResources().getDrawable(R.drawable.surah);
-                surahIcon.setBounds(0, 0, surahIcon.getIntrinsicWidth() * 3, 24 * 3);
-
-                quranSpannable.setSpan(
-                    ImageSpan(surahIcon, ImageSpan.ALIGN_BASELINE),
-                    totalCounts,
-                    totalCounts + 1,
-                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-                )
-
-                quranSpannable.setSpan(
-                    clickableSpan,
-                    totalCounts,
-                    totalCounts + it.text.length,
-                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-                )
-            }
+            quranSpannable.setSpan(
+                clickableSpan,
+                totalCounts,
+                totalCounts + it.text.length,
+                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
 
             totalCounts += it.text.length + 1
         }
 
-       return quranSpannable
+        return quranSpannable
     }
 }
