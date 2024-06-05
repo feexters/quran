@@ -1,10 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="5dp">
+    android:padding="5dp">§
+
+    <ImageView
+        android:id="@+id/surah_image"
+        android:layout_width="wrap_content"
+        android:layout_height="20pt"
+        android:layout_gravity="center"
+        android:visibility="gone"
+        android:layout_marginTop="5pt"
+        android:layout_marginBottom="10pt"
+        />
+
+    <ImageView
+        android:id="@+id/bismillah"
+        android:layout_width="wrap_content"
+        android:layout_height="20pt"
+        android:layout_gravity="center"
+        android:visibility="gone"
+        android:layout_marginTop="10pt"
+        android:layout_marginBottom="20pt"
+        />
+
 
     <TextView
         android:id="@+id/quran_page"
