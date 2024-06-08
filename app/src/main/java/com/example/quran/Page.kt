@@ -1,16 +1,16 @@
 package com.example.quran
 
-data class Quran(val pages: Array<Page>) {
+data class Page(val ayahs: Array<Ayah>) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as Quran
+        other as Page
 
-        return pages.contentEquals(other.pages)
+        return ayahs.contentEquals(other.ayahs)
     }
 
     override fun hashCode(): Int {
-        return pages.contentHashCode()
+        return ayahs.contentHashCode()
     }
 }

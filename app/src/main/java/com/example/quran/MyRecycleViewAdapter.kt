@@ -11,27 +11,27 @@ import android.text.style.ClickableSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.quran.Ayah
 import com.example.quran.R
+import com.example.quran.createScaledImageSpan
 import com.example.quran.toArabicNumerals
 
 class MyRecycleViewAdapter(private val pages: List<List<Ayah>>, val context: Context) :
-        RecyclerView.Adapter<MyRecycleViewAdapter.ViewHolder>() {
+    RecyclerView.Adapter<MyRecycleViewAdapter.ViewHolder>() {
 
     private lateinit var mRecyclerView: RecyclerView
 
     inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         var quranPage: TextView = view.findViewById(R.id.quran_page)
-        var surahImage: ImageView = view.findViewById(R.id.surah_image)
-        var bismillah: ImageView = view.findViewById(R.id.bismillah)
+        var pageNumber: TextView = view.findViewById(R.id.page_number)
+        var bottomBorder: View = view.findViewById(R.id.border)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         return ViewHolder(
-                LayoutInflater.from(parent.context).inflate(R.layout.recycleview_row, parent, false)
+            LayoutInflater.from(parent.context).inflate(R.layout.recycleview_row, parent, false)
         )
     }
 
@@ -63,29 +63,8 @@ class MyRecycleViewAdapter(private val pages: List<List<Ayah>>, val context: Con
         holder.quranPage.movementMethod = LinkMovementMethod.getInstance()
 
         val page = pages[position]
+        holder.pageNumber.text = "${position + 1}"
 
-
-        val surahNumber = page.firstOrNull()?.surahIndex ?: 0
-        if (surahNumber.toInt() >= 0) {
-            val surahImageResId = context.resources.getIdentifier("surah${surahNumber.toInt() + 1}", "drawable", context.packageName)
-            if (surahImageResId != 0) {
-                holder.surahImage.setImageResource(surahImageResId)
-                holder.surahImage.visibility = View.VISIBLE
-            } else {
-                holder.surahImage.visibility = View.GONE
-            }
-        } else {
-            holder.surahImage.visibility = View.GONE
-        }
-
-        val ayahWithBismillah = page.find { it.bismillah != null }
-        val bismillahImageResId = context.resources.getIdentifier("bismillah", "drawable", context.packageName)
-        if (ayahWithBismillah!=null) {
-            holder.bismillah.setImageResource(bismillahImageResId)
-            holder.bismillah.visibility = View.VISIBLE
-        } else {
-            holder.bismillah.visibility = View.GONE
-        }
     }
 
     override fun getItemCount(): Int {
@@ -101,9 +80,41 @@ class MyRecycleViewAdapter(private val pages: List<List<Ayah>>, val context: Con
 
         var totalCounts = 0
 
-
-
         ayahs.forEachIndexed { index, it ->
+            if (it.index == 0) {
+                val surahNumber = it.surahIndex
+                if (surahNumber.toInt() >= 0) {
+                    val surahImageResId = context.resources.getIdentifier("surah${surahNumber.toInt() + 1}", "drawable", context.packageName)
+                    if (surahImageResId != 0) {
+                        quranSpannable.append("\n\n")
+
+                        val imageWidth = 300
+                        val imageHeight = 125
+                        val surahImageSpan = createScaledImageSpan(context, surahImageResId, imageWidth, imageHeight)
+
+                        val surahImageSpannable = SpannableString(" ")
+                        surahImageSpannable.setSpan(surahImageSpan, 0, 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                        surahImageSpannable.setSpan(AlignmentSpan.Standard(Layout.Alignment.ALIGN_CENTER), 0, 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                        quranSpannable.append(surahImageSpannable)
+                        quranSpannable.append("\n\n")
+                    }
+                }
+            }
+
+            if (it.bismillah != null) {
+                val bismillahImageResId = context.resources.getIdentifier("bismillah", "drawable", context.packageName)
+
+                val imageWidth = 500
+                val imageHeight = 100
+
+                val bismillahImageSpan = createScaledImageSpan(context, bismillahImageResId, imageWidth, imageHeight)
+                val bismillahImageSpannable = SpannableString(" ")
+                bismillahImageSpannable.setSpan(bismillahImageSpan, 0, 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                bismillahImageSpannable.setSpan(AlignmentSpan.Standard(Layout.Alignment.ALIGN_CENTER), 0, 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                quranSpannable.append(bismillahImageSpannable)
+                quranSpannable.append("\n\n")
+            }
+
             val clickableSpan: ClickableSpan = object : ClickableSpan() {
                 override fun onClick(view: View) {
                     onPress(index)
@@ -135,60 +146,6 @@ class MyRecycleViewAdapter(private val pages: List<List<Ayah>>, val context: Con
             }
 
             totalCounts += it.text.length + 1
-
-            if (it.pageNumber != null) {
-                val pageNumberText = SpannableString("\n\n${it.pageNumber}\n")
-                pageNumberText.setSpan(
-                    object : ClickableSpan() {
-                        override fun onClick(widget: View) {}
-
-                        override fun updateDrawState(ds: TextPaint) {
-                            super.updateDrawState(ds)
-                            ds.isUnderlineText = false
-                            ds.color = Color.GRAY
-                            ds.textSize = 52f
-                        }
-                    },
-                    0,
-                    pageNumberText.length,
-                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-                )
-                pageNumberText.setSpan(
-                    AlignmentSpan.Standard(Layout.Alignment.ALIGN_CENTER),
-                    0,
-                    pageNumberText.length,
-                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-                )
-
-                quranSpannable.append(pageNumberText)
-
-                val borderText = SpannableString("──────────────\n")
-                borderText.setSpan(
-                    object : ClickableSpan() {
-                        override fun onClick(widget: View) {}
-
-                        override fun updateDrawState(ds: TextPaint) {
-                            super.updateDrawState(ds)
-                            ds.isUnderlineText = false
-                            ds.color = Color.BLACK
-                            ds.textSize = 32f
-                        }
-                    },
-                    0,
-                    borderText.length,
-                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-                )
-
-                borderText.setSpan(
-                    AlignmentSpan.Standard(Layout.Alignment.ALIGN_CENTER),
-                    0,
-                    borderText.length,
-                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-                )
-
-                quranSpannable.append(borderText)
-            }
-
         }
 
         return quranSpannable

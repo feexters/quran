@@ -3,33 +3,32 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="5dp">§
-
-    <ImageView
-        android:id="@+id/surah_image"
-        android:layout_width="wrap_content"
-        android:layout_height="20pt"
-        android:layout_gravity="center"
-        android:visibility="gone"
-        android:layout_marginTop="5pt"
-        android:layout_marginBottom="10pt"
-        />
-
-    <ImageView
-        android:id="@+id/bismillah"
-        android:layout_width="wrap_content"
-        android:layout_height="20pt"
-        android:layout_gravity="center"
-        android:visibility="gone"
-        android:layout_marginTop="10pt"
-        android:layout_marginBottom="20pt"
-        />
-
+    android:padding="5dp">
 
     <TextView
         android:id="@+id/quran_page"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textSize="32sp" />
+        android:textSize="32sp"
+        android:layout_marginBottom="10pt"
+        />
 
+    <TextView
+        android:id="@+id/page_number"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@android:color/darker_gray"
+        android:textSize="16sp"
+        android:layout_gravity="center"
+        android:layout_marginBottom="4pt"
+        />
+
+    <View
+        android:id="@+id/border"
+        android:layout_width="50pt"
+        android:layout_height="1px"
+        android:background="@android:color/black"
+        android:layout_gravity="center"
+        android:layout_marginTop="5dp"
+        />
 </LinearLayout>
