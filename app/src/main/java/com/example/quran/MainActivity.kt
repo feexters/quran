@@ -21,10 +21,11 @@ class MainActivity : AppCompatActivity() {
 
         val quran = Klaxon().parse<QuranDto>(quranJson) as QuranDto
 
-        pages = quran.quran.surahs.map { it.ayahs.toList() }
+        pages = quran.quran.pages.map { it.ayahs.toList() }
 
         val recyclerView = findViewById<RecyclerView>(R.id.quranScroll)
         recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.adapter = MyRecycleViewAdapter(pages, this)
+//        recyclerView.scrollToPosition(603);
     }
 }
